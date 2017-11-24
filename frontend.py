@@ -1,3 +1,5 @@
+#! python3
+
 """
 A program that stores this book information: Title, Author, Year, ISBN
 =====================
@@ -13,104 +15,111 @@ from backend import Database
 
 database = Database('books.db')
 
-# function tied to <<ListboxSelect>> event
-def get_selected_row(event):
-    try:
-        global selected_tuple
-        index = listbox1.curselection()[0]
-        selected_tuple = listbox1.get(index)
-        e1.delete(0, tk.END)
-        e1.insert(tk.END, selected_tuple[1])
-        e2.delete(0, tk.END)
-        e2.insert(tk.END, selected_tuple[2])
-        e3.delete(0, tk.END)
-        e3.insert(tk.END, selected_tuple[3])
-        e4.delete(0, tk.END)
-        e4.insert(tk. END, selected_tuple[4])
-    except IndexError:
-        pass
+class Window(object):
+
+    def __init__(self, window):
+
+        self.window = window
+        self.window.title('Book Search')
+
+        # create labels that correspond to entry fields
+        l1 = tk.Label(window, text='Title')
+        l1.grid(row=0, column=0)
+        l2 = tk.Label(window, text='Author')
+        l2.grid(row=0, column=2)
+        l3 = tk.Label(window, text='Year')
+        l3.grid(row=1, column=0)
+        l4 = tk.Label(window, text='ISBN')
+        l4.grid(row=1, column=2)
+
+        # create entry fields that correspond to labels
+        self.title_text = tk.StringVar()
+        self.e1 = tk.Entry(window, textvariable=self.title_text)
+        self.e1.grid(row=0, column=1)
+        self.author_text = tk.StringVar()
+        self.e2 = tk.Entry(window, textvariable=self.author_text)
+        self.e2.grid(row=0, column=3)
+        self.year_text = tk.StringVar()
+        self.e3 = tk.Entry(window, textvariable=self.year_text)
+        self.e3.grid(row=1, column=1)
+        self.isbn_text = tk.StringVar()
+        self.e4 = tk.Entry(window, textvariable=self.isbn_text)
+        self.e4.grid(row=1, column=3)
+
+        # create listbox to list books
+        self.listbox1 = tk.Listbox(window, height=6, width=35)
+        self.listbox1.grid(row=2, column=0, rowspan=6, columnspan=2)
+
+        # create scrollbar
+        self.scroll1 = tk.Scrollbar(window)
+        self.scroll1.grid(row=2, column=2, rowspan=6, sticky='nsw')
+
+        # configure scroll and listbox
+        self.listbox1.configure(yscrollcommand=self.scroll1.set)
+        self.scroll1.configure(command=self.listbox1.yview)
+
+        self.listbox1.bind('<<ListboxSelect>>', self.get_selected_row)
+
+        # create buttons
+        self.b1 = tk.Button(window, text='View all', width=12, command=self.view_command)
+        self.b1.grid(row=2, column=3)
+        self.b2 = tk.Button(window, text='Search entry', width=12, command=self.search_command)
+        self.b2.grid(row=3, column=3)
+        self.b3 = tk.Button(window, text='Add entry', width=12, command=self.add_command)
+        self.b3.grid(row=4, column=3)
+        self.b4 = tk.Button(window, text='Update selected', width=12, command=self.update_command)
+        self.b4.grid(row=5, column=3)
+        self.b5 = tk.Button(window, text='Delete selected', width=12, command=self.delete_command)
+        self.b5.grid(row=6, column=3)
+        self.b6 = tk.Button(window, text='Close', width=12, command=self.window.destroy)
+        self.b6.grid(row=7, column=3)
 
 
-# populate the listbox
-def view_command():
-    listbox1.delete(0, tk.END)  # clear the box each time
-    for row in database.view():
-        listbox1.insert(tk.END, row)
+    # function tied to <<ListboxSelect>> event
+    def get_selected_row(self, event):
+        try:
+            # global selected_tuple
+            index = self.listbox1.curselection()[0]
+            self.selected_tuple = self.listbox1.get(index)
+            self.e1.delete(0, tk.END)
+            self.e1.insert(tk.END, self.selected_tuple[1])
+            self.e2.delete(0, tk.END)
+            self.e2.insert(tk.END, self.selected_tuple[2])
+            self.e3.delete(0, tk.END)
+            self.e3.insert(tk.END, self.selected_tuple[3])
+            self.e4.delete(0, tk.END)
+            self.e4.insert(tk. END, self.selected_tuple[4])
+        except IndexError:
+            pass
 
-# search db wrapper function
-def search_command():
-    listbox1.delete(0, tk.END)
-    for row in database.search(title_text.get(), author_text.get(), year_text.get(), isbn_text.get()):
-        listbox1.insert(tk.END, row)
 
-# add book to wrapper function
-def add_command():
-    database.insert(title_text.get(), author_text.get(), year_text.get(), isbn_text.get())
-    listbox1.delete(0, tk.END)
-    listbox1.insert(tk.END, (title_text.get(), author_text.get(), year_text.get(), isbn_text.get()))
+    # populate the listbox
+    def view_command(self):
+        self.listbox1.delete(0, tk.END)  # clear the box each time
+        for row in database.view():
+            self.listbox1.insert(tk.END, row)
 
-# remove book from db wrapper function
-def delete_command():
-    database.delete(selected_tuple[0])
+    # search db wrapper function
+    def search_command(self):
+        self.listbox1.delete(0, tk.END)
+        for row in database.search(self.title_text.get(), self.author_text.get(), self.year_text.get(), self.isbn_text.get()):
+            self.listbox1.insert(tk.END, row)
 
-# update book in db wrapper function
-def update_command():
-    database.update(selected_tuple[0], title_text.get(), author_text.get(), year_text.get(), isbn_text.get())
+    # add book to wrapper function
+    def add_command(self):
+        database.insert(self.title_text.get(), self.author_text.get(), self.year_text.get(), self.isbn_text.get())
+        self.listbox1.delete(0, tk.END)
+        self.listbox1.insert(tk.END, (self.title_text.get(), self.author_text.get(), self.year_text.get(), self.isbn_text.get()))
 
+    # remove book from db wrapper function
+    def delete_command(self):
+        database.delete(self.selected_tuple[0])
+
+    # update book in db wrapper function
+    def update_command(self):
+        database.update(self.selected_tuple[0], self.title_text.get(), self.author_text.get(), self.year_text.get(), self.isbn_text.get())
 
 window = tk.Tk()
-window.title('Book Search')
-
-# create labels that correspond to entry fields
-l1 = tk.Label(window, text='Title')
-l1.grid(row=0, column=0)
-l2 = tk.Label(window, text='Author')
-l2.grid(row=0, column=2)
-l3 = tk.Label(window, text='Year')
-l3.grid(row=1, column=0)
-l4 = tk.Label(window, text='ISBN')
-l4.grid(row=1, column=2)
-
-# create entry fields that correspond to labels
-title_text = tk.StringVar()
-e1 = tk.Entry(window, textvariable=title_text)
-e1.grid(row=0, column=1)
-author_text = tk.StringVar()
-e2 = tk.Entry(window, textvariable=author_text)
-e2.grid(row=0, column=3)
-year_text = tk.StringVar()
-e3 = tk.Entry(window, textvariable=year_text)
-e3.grid(row=1, column=1)
-isbn_text = tk.StringVar()
-e4 = tk.Entry(window, textvariable=isbn_text)
-e4.grid(row=1, column=3)
-
-# create listbox to list books
-listbox1 = tk.Listbox(window, height=6, width=35)
-listbox1.grid(row=2, column=0, rowspan=6, columnspan=2)
-
-# create scrollbar
-scroll1 = tk.Scrollbar(window)
-scroll1.grid(row=2, column=2, rowspan=6, sticky='nsw')
-
-# configure scroll and listbox
-listbox1.configure(yscrollcommand=scroll1.set)
-scroll1.configure(command=listbox1.yview)
-
-listbox1.bind('<<ListboxSelect>>', get_selected_row)
-
-# create buttons
-b1 = tk.Button(window, text='View all', width=12, command=view_command)
-b1.grid(row=2, column=3)
-b2 = tk.Button(window, text='Search entry', width=12, command=search_command)
-b2.grid(row=3, column=3)
-b3 = tk.Button(window, text='Add entry', width=12, command=add_command)
-b3.grid(row=4, column=3)
-b4 = tk.Button(window, text='Update selected', width=12, command=update_command)
-b4.grid(row=5, column=3)
-b5 = tk.Button(window, text='Delete selected', width=12, command=delete_command)
-b5.grid(row=6, column=3)
-b6 = tk.Button(window, text='Close', width=12, command=window.destroy)
-b6.grid(row=7, column=3)
+Window(window)
 
 window.mainloop()
